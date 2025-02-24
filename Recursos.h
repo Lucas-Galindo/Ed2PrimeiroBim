@@ -70,6 +70,28 @@ int possuiSet(char secondPart[30]){
 					
 }
 
+char concatenaString(char final[30], char primeiro[30], char segundo[30], char condicao[30]){
+	
+	int i=0;
+	int tl=0;
+	if(strcmp(condicao,"junto")==0)
+	{
+		while(strlen(primeiro)>i)
+		{
+			final[tl++] = primeiro[i];
+			i++;
+		}
+		i = 0;
+		while(strlen(segundo)>i)
+		{
+			final[tl++] = segundo[i];
+			i++;
+		}
+		
+		//printf("Resultado Concat: %s",final);
+	}
+}
+
 
 
 

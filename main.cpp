@@ -18,12 +18,16 @@
 /**
 	AINDA FALTA - COLOCAR O PDADOS , PATUAL E A LISTA DE STATUS
 	
-	IMPLEMENTAR PILHA QUE SEGURE O QUE FOI INPUTADO, 
-	COMO VOU SABER QUEM E DE QUEM, ESTOU DANDO USE EM QUEM
-	CASO NO MEIO DO PROCESSO TENHA UM OUTRO USE, FAZER QUE DESEMPILHE TUDO
-	E USE O OUTRO COMANDO
 */
 
+union uniao{
+	float ValorN;
+	char ValorC[50];
+	char ValorD[10];
+	char ValorL[1/0];
+	char ValorM[50];
+	uniao *prox;
+}; 
 
 struct tpCampos{
 	char nome[30];
@@ -32,9 +36,14 @@ struct tpCampos{
 	int dec;
 }; typedef struct tpCampos TpCampo;
 
+struct listacampos{
+	TpCampo info;
+	struct listacampos *prox;
+	union uniao *pDados, *pAtual;
+};typedef struct listacampos lista_campos;
+
 struct status{
-	TpStatus info;
-	struct status *ptr;
+	union uniao *pStatus;
 	
 };typedef struct status Status;
 
@@ -49,15 +58,15 @@ struct tpHora{
 
 struct tpArgs{
 	char nome[30];
-	TpData data;
-	TpTempo tempo;
+	struct TpData data;
+	struct TpTempo tempo;
 }; typedef struct tpArgs TpArgs;
 
 struct args{
 	struct args *ant, *prox;
-	TpArgs info;
-	TpCampo *pCampo;
-	Status *pStatus;
+	struct TpArgs info;
+	struct lista_campos *pCampo;
+	//Status *pStatus;
 	
 };typedef struct args lista_args;
 
@@ -65,7 +74,7 @@ struct args{
 struct unidade{
 	char nome[3];
 	struct unidade *top, *bottom;
-	lista_args *args;
+	struct lista_args *args;
 }; typedef struct unidade Unidade;
 
 struct campos{
@@ -76,10 +85,38 @@ struct campos{
 
 
 
+/////////////////////EXIBINDO LISTAS PARA TESTE//////////////////////
+
+void exibeARGS(lista_args *lista){
+	
+	lista_campos *aux;
+	
+	while(lista!=NULL){
+		printf("Nome: %s\t",lista->info.nome);
+		printf("Data: %d/%d/%d\t",lista->info.data.d,lista->info.data.m,lista->info.data.a);
+		printf("Tempo: %d:%d",lista->info.tempo.h,lista->info.tempo.m);
+		
+		aux=lista->pCampo;
+		while(aux!=NULL){
+			printf("\nName: %s",aux->info.nome);
+			printf("\nType: %S",aux->info.type);
+			printf("\nWidth: %d",aux->info.width);
+			aux=aux->prox;	
+		}
+		
+		lista=lista->prox;
+	}
+	printf("\n");
+}
+
+
+
+////////////////////////////////////////////////////////////////////
+
 void clear(){
 
 
-	int LI = 5, CI= 3, LF = 30, CF  = 20;
+	int LI = 1, CI= 1, LF = 30, CF  = 20;
 	int i, j;
 	textbackground(0);
 	for(i=LI;i<=LF;i++){
@@ -89,96 +126,75 @@ void clear(){
 		}
 	}
 	textbackground(0);
+	gotoxy(1,1);
 }
 
 
 //////////// INSERCAO //////////////
 
-void inserirArgs(lista_agrs **lista, TpArgs A){
+lista_args *inserirArgs(lista_args *lista, TpArgs A){
 	lista_args *novo;
 	novo = (lista_args*)malloc(sizeof(lista_args));
 	novo->info = A;
 	novo->pCampo = NULL;
-	novo->pStatus = NULL;
+	//novo->pStatus = NULL;
 	novo->ant=novo->prox=NULL;
 	
 	
-	if(*lista == NULL)
-		*lista = novo;
+	if(lista == NULL)
+		lista = novo;
 	else
 	{
 		//Colocando no final da lista sempre
-		lista_args *aux = *lista;
+		lista_args *aux = lista;
 		while(aux->prox!=NULL)
 			aux=aux->prox;
 				
 		novo->ant = aux;
 		aux ->prox = novo;
 	}	
+	return lista;
+}
+
+void inserirCampos(lista_campos **lista, TpCampo C){
+	
+	lista_campos *novo;
+	novo = (lista_campos*)malloc(sizeof(lista_campos));
+	novo->info = C;
+	novo->prox = NULL;
+	
+	if(*lista==NULL)
+		*lista = novo;
+	else
+	{
+		lista_campos *aux = *lista;
+		while(aux->prox!=NULL)
+			aux=aux->prox;
+		
+		aux->prox = novo;	
+	}	
+	
 	
 }
+
 
 
 ///////////////////////////////////
 
 
+
+
+
+
+
+
+
 ///////////OPERACAO/////////////
 
-void createArgs(Unidade **lista, char tableName[30]){
-	/**
-	Usando biblioteca time.h para pegar a hora a data direto do sistema
-	*/
-	struct tm *p;
-    time_t seconds;
-    time(&seconds);
-    p = localtime(&seconds);
-    
-    TpArgs A;
-	
-	//printf("\n%c",carac);
-	
-	//char dia[2], mes[2], ano[4];
-		
-	/** Convertendo o dia extraido para string*/
-		
-	/*sprintf(dia,"%d",p->tm_mday);
-	sprintf(mes,"%d",p->tm_mon + 1);
-	sprintf(ano,"%d",p->tm_year + 1900);*/
-	//printf("%s",dia);
-	
-	
-	/** Colocando as variaveis de data int*/
-	A.data.d = p->tm_mday;
-	A.data.m = p->tm_mon + 1;
-	A.data.a = p->tm_year + 1900;
-	
-	/** Colocando as variaveis de tempo (hora e minuto) int*/
-	A.tempo.h = p->tm_min;
-	A.tempo.m = p->tm_sec;
-	
-	
-	//printf("%d/%d/%d",A.data.d,A.data.m,A.data.a);
-	//printf("%d:%d", A.tempo.h,A.tempo.m);
-	
-	//char formatData[20] = {dia[2]+'/'+mes[2]+'/'+ano[4]};
-	
-	//strcpy(A.data,dia[2]+'/'+mes[2]+'/'+ano[4]);
-	//printf("\n%s",A.data);
+lista_campos *createCampos(lista_campos *lista){
 
-   // printf("Data: %d/%d/%d\n", p->tm_mday, p->tm_mon + 1, p->tm_year + 1900);
-    //printf("Hora: %d:%d:%d\n", p->tm_hour, p->tm_min, p->tm_sec);
-	
-	strcpy(A.nome,tableName);
-	
-	lista_args *listaA = *lista->args;
-
-	inserirArgs(&*lista->args, A);
-}
-
-
-
-void createCampos(){
-
+	//Gerando menu especifico - Localizado: Estilo.h
+	clear();
 	menuCreate();
 	
 	/**
@@ -197,25 +213,85 @@ void createCampos(){
 	while(esc!=27){
 		
 		gotoxy(3,y);printf("%d",i);
-		gotoxy(6,y);fflush(stdin);gets(C.nome);	
-		gotoxy(18,y);fflush(stdin);gets(C.type);
-		gotoxy(30,y);scanf("%d",&C.width);
+		gotoxy(6,y);gets(C.nome);fflush(stdin);		
+		gotoxy(18,y);gets(C.type);fflush(stdin);
+		gotoxy(30,y);scanf("%d",&C.width);		
 		gotoxy(39,y);scanf("%d",&C.dec);
-	
-	
+		fflush(stdin);
+		
 		/**
 		 Guardar dentro da lista
 		*/
-		
-		
+		inserirCampos(&lista,C);
 		
 		y+=2;
 		i++;
 		
 		esc = getch();
 	}
+	return lista;
+}
+
+
+int createArgs(Unidade **lista, char tableName[30], char *unid){
+	/**
+		Usando biblioteca time.h para pegar a hora a data direto do sistema
+	*/
+	struct tm *p;
+    time_t seconds;
+    time(&seconds);
+    p = localtime(&seconds);
+    
+    TpArgs A;
+		
+	/** Colocando as variaveis de data int*/
+	A.data.d = p->tm_mday;
+	A.data.m = p->tm_mon + 1;
+	A.data.a = p->tm_year + 1900;
+	
+	/** Colocando as variaveis de tempo (hora e minuto) int*/
+	A.tempo.h = p->tm_hour;
+	A.tempo.m = p->tm_min;
+	
+	strcpy(A.nome,tableName);
+	
+	char opcao[3];
+	
+	
+	Unidade *listaU = *lista;
+	char unidAux[30] = {};
+	
+	if(*unid == 'C')
+		concatenaString(unidAux,"C",":","junto");
+	else
+		if(*unid == 'D')
+			concatenaString(unidAux,"D",":","junto");		
+	
+	//printf("\nAQ1");
+	if(strcmp(unidAux,"C:") == 0 || strcmp(unidAux,"D:") == 0)
+		strcpy(opcao,unidAux);
+	else
+		strcpy(opcao,"#");
+		
+	//printf("\nOpcao: %s",opcao);	
+	//printf("\nAQ2");	
+	while(strcmp(listaU->nome,opcao)!=0)
+		listaU=listaU->top;
+		
+
+	//printf("\nAQ3");
+	listaU->args = inserirArgs(listaU->args, A);
+	
+	
+	
+	listaU->args->pCampo = createCampos(listaU->args->pCampo);
+	exibeARGS((*lista)->args);
+	
+	if(listaU!=NULL)
+		return 103;
 	
 }
+
 
 
 int direcionaComando(Unidade **lista, char *unid, char firstPart[30], char secondPart[30], char thirdPart[30], char fourthPart[30]){
@@ -223,10 +299,13 @@ int direcionaComando(Unidade **lista, char *unid, char firstPart[30], char secon
 	/**
 	 	PODE SER QUE OS DOIS ULTIMOS PARAMETRO ESTEJAM VAZIOS {}. NAO TEM PROBLEMA
 	*/
+	
+	/*
 	printf("\nPrimeira parte: %s", firstPart);
     printf("\nSegunda parte: %s", secondPart);
     printf("\nTerceira parte: %s", thirdPart);
     printf("\nQuarta parte: %s", fourthPart);
+    */
     
 	/*int value;   
 	if(strcmp(secondPart,"DEFAULT") == 0)
@@ -254,14 +333,14 @@ int direcionaComando(Unidade **lista, char *unid, char firstPart[30], char secon
 		unid = (char*)malloc(sizeof(char));*/
 
 			//printf("\n%c",*unid);
-			if(strcmp(fourthPart,"C") == 0){
+			if(strcmp(fourthPart,"C:") == 0){
 				
 				*unid = 'C';
 				//printf("\n%c",*unid);
 				return 0;
 			}	
 			else
-				if(strcmp(fourthPart,"D") == 0){
+				if(strcmp(fourthPart,"D:") == 0){
 					
 					*unid = 'D';
 					//printf("\n%c",*unid);
@@ -277,86 +356,89 @@ int direcionaComando(Unidade **lista, char *unid, char firstPart[30], char secon
 		//strcpy(unid,fourthPart);
 		//printf("\nUNIDADE: %c",unid);
 		
-	}		
-	if(strcmp(firstPart,"CREATE")==0)
-	{
-		//clear();
-		createArgs(&lista, secondPart);
 	}
-	else
-		if(strcmp(firstPart,"quit") ==0 || strcmp(firstPart,"QUIT")==0)
+	else 
+	if(strcmp(firstPart,"QUIT")==0)
 		{
 			return -1;
-		}
-		else
+		}	
+	else if(*unid == '#'){
+		return 102; 
+	}	
+	else if(strcmp(firstPart,"CREATE")==0)
+	{
+		//clear();
+		createArgs(&(*lista), secondPart, unid);
+	}
+	else
 		{
-			if(strcmp(firstPart,"DIR") ==0 || strcmp(firstPart,"dir")==0)
+			if(strcmp(firstPart,"DIR") ==0)
 			{
 				
 			}
 			else
 			{
-				if((strcmp(firstPart,"LIST") == 0 || strcmp(firstPart,"list") ==0) && (strcmp(secondPart,"STRUCTURE") == 0 || strcmp(secondPart,"structure")==0 ))
+				if(strcmp(firstPart,"LIST") == 0  && strcmp(secondPart,"STRUCTURE") == 0 )
 				{
 						
 				}
 				else
 				{
-					if(strcmp(firstPart,"LIST") == 0 || strcmp(firstPart,"list") ==0)
+					if(strcmp(firstPart,"LIST") == 0)
 					{
 						
 					}
 					else
 					{
-						if(strcmp(firstPart,"APPEND") == 0 || strcmp(firstPart,"append") ==0)
+						if(strcmp(firstPart,"APPEND") == 0 )
 						{
 							
 						}
 						else
 						{
-							if(strcmp(firstPart,"CLEAR") == 0 || strcmp(firstPart,"clear") ==0)
+							if(strcmp(firstPart,"CLEAR") == 0 )
 							{
 								clear();
 							}
 							else
 							{
-								if(strcmp(firstPart,"LOCATE") == 0 || strcmp(firstPart,"locate") ==0)
+								if(strcmp(firstPart,"LOCATE") == 0 )
 								{
 									
 								}
 								else
 								{
-									if(strcmp(firstPart,"GOTO") == 0 || strcmp(firstPart,"goto") ==0)
+									if(strcmp(firstPart,"GOTO") == 0 )
 									{
 										
 									}
 									else
 									{
-										if(strcmp(firstPart,"DISPLAY") == 0 || strcmp(firstPart,"display") ==0)
+										if(strcmp(firstPart,"DISPLAY") == 0 )
 										{
 											
 										}
 										else
 										{
-											if(strcmp(firstPart,"DISPLAY") == 0 || strcmp(firstPart,"display") ==0)
+											if(strcmp(firstPart,"DISPLAY") == 0 )
 											{
 												
 											}
 											else
 											{
-												if(strcmp(firstPart,"EDIT") == 0 || strcmp(firstPart,"edit") == 0)
+												if(strcmp(firstPart,"EDIT") == 0 )
 												{
 													
 												}
 												else
 												{
-													if(strcmp(firstPart,"DELETE") == 0 || strcmp(firstPart,"delete") ==0)
+													if(strcmp(firstPart,"DELETE") == 0)
 													{
 														
 													}
 													else
 													{
-														if((strcmp(firstPart,"SET") == 0 || strcmp(firstPart,"set") ==0) && (strcmp(secondPart,"DELETED") == 0 || strcmp(secondPart,"deleted")))
+														if(strcmp(firstPart,"SET") == 0 && strcmp(secondPart,"DELETED") == 0 )
 														{
 															
 														}
@@ -525,7 +607,7 @@ int identificaComando(char *unid, char linha[30], Unidade **lista){
 		//printf("\n%s",arraySubString);
 		
 	
-	return direcionaComando(&lista, unid, firstPart, secondPart, thirdPart, fourthPart);
+	return direcionaComando(&(*lista), unid, firstPart, secondPart, thirdPart, fourthPart);
 		
 }
 
@@ -573,22 +655,30 @@ void operacao(Unidade **lista){
 	
 	int value; char linha[30];
 	
-	char *unid;
-	unid = (char*)malloc(sizeof(char));
+	char unid = '#';
 	gets(linha);
 	fflush(stdin);
 	while(value!=-1 ){
 		
 		
 		if(strcmp(linha," ")!=0 && strcmp(linha,"/0")!=0)
-			value = identificaComando(unid, linha, &lista);
+			value = identificaComando(&unid, linha, &(*lista));
 		
 		if(value == 101)
-			printf("\nERRO 101 - direcionaComando() - ERRO SET DEFAULT TO\n");
-					
+			printf("\nERRO 101 - direcionaComando() - ERRO: DENTRO DE SET DEFAULT TO\n");
+		else
+			if(value == 102)
+				printf("\nERRO 102 - direcionaComando() - PRIMEIRO FACA O SET DEFAULT TO\n");
+			else
+				if(value == 103)
+					printf("\nERRO 103 - createARGS() - PROBLEMA NA FUNCAO APRESENTADA\n");
+				
+				
 		gets(linha);
 		fflush(stdin);
 	}
+	printf("\nVOCE SAIU DO TRABALHO...");
+	printf("\nFECHE O PROMPT");
 		
 }
 
@@ -610,7 +700,7 @@ void Inicio(Unidade **lista, char name[3]){
 	}
 	else{
 		Unidade *aux = *lista;
-		where(aux->bottom!=NULL)
+		while(aux->bottom!=NULL)
 			aux=aux->bottom;
 		
 		aux->bottom = unid;	
@@ -625,11 +715,11 @@ void Inicio(Unidade **lista, char name[3]){
 */
 
 int main(){
-	Unidade *C=NULL;
+	struct Unidade *C=NULL;
 	
 	Inicio(&C,"C:");
 	Inicio(&C,"D:");
-	
+		
 	//create();
 	operacao(&C);
 	
